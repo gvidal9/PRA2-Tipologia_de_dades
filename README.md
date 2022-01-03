@@ -1,0 +1,1 @@
+# PRA2-Tipologia_de_dades
