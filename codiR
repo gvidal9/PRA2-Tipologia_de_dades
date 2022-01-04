@@ -1,0 +1,106 @@
+if (!require('ggplot2')) install.packages('ggplot2')
+library(ggplot2)
+
+if (!require('dplyr')) install.packages('dplyr')
+library(dplyr)
+dades <- read.csv("train.csv", stringsAsFactors = FALSE, fileEncoding = "UTF-8")
+head(dades)
+dades <- dades %>% select(Survived, Pclass, Sex, Age, SibSp, Parch, Fare, Embarked)
+shapiro.test(dades$Age)
+shapiro.test(dades$Fare)
+colSums(is.na(dades))
+colSums(dades=="")
+dades$Age[is.na(dades$Age)] <- mean(dades$Age,na.rm=T)
+dades$Age_disc <- cut(dades$Age, breaks = c(0,10,20,30,40,50,60,70,100), labels = c("0-9", "10-19", "20-29", "30-39","40-49","50-59","60-69","70-79"))
+plot(dades$Age_disc, main="Nombre de passatgers agrupats per edat",xlab="Edat", ylab="Nombre de passatgers")
+boxplot_age <- boxplot(dades$Age, main= "Boxplot Age")
+boxplot_fare <- boxplot(dades$Fare, main= "Boxplot Fare")
+vector_disc <- vector()
+
+for (i in 1:length(dades$Pclass)){
+  if (dades$Pclass[i]==1){
+    vector_disc[i] <- dades$Fare[i]
+  }
+}
+vector_disc <- vector_disc[!is.na(vector_disc)] #eliminem valors NA
+
+# Tenim un vector que emmagatzema tots els valors de Fare dels passatgers de primera classe
+
+mitjana_class1 <- mean(vector_disc)
+
+dades$Fare[dades$Fare==512.3292] <- mitjana_class1
+
+{qqnorm(dades$Age)
+qqline(dades$Age, col = "steelblue", lwd = 2)}
+{qqnorm(dades$Fare, pch = 1, frame = FALSE)
+qqline(dades$Fare, col = "steelblue", lwd = 2)}
+
+if (!require('car')) install.packages('car')
+library(car)
+leveneTest(dades$Age,dades$Fare)
+
+dades$Survived<-as.factor(dades$Survived)
+dades$Pclass<-as.factor(dades$Pclass)
+model1<-glm(dades$Survived ~ dades$Sex, family = binomial)
+summary(model1)
+
+exp(coefficients(model1))
+
+homes = dades[!(dades$Sex == "male"), ]
+dones = dades[!(dades$Sex == "female"), ]
+
+t.test(homes$Age, dones$Age)
+t.test(homes$Fare, dones$Fare)
+
+matriu<-table(dades$Survived, dades$Pclass)
+matriu
+
+chisq.test(matriu)
+
+model2<-glm(dades$Survived ~ dades$Pclass, family = binomial)
+summary(model2)
+
+exp(coefficients(model2))
+
+library('GGally')
+
+ggcorr(dades,label = T,label_size = 2.9,hjust = 1,layout.exp = 1)
+
+if (!require('tidyverse')) install.packages('tidyverse')
+if (!require('ggthemes')) install.packages('ggthemes')
+library(tidyverse)
+library(ggthemes)
+ggplot(dades, aes(x=Sex, fill=Survived, colour=Survived)) + geom_bar() + ggthemes::theme_economist() + scale_color_gdocs() + ggthemes::scale_fill_gdocs()
+
+ggplot(dades, aes(Embarked)) +
+  geom_bar(fill = "#0073C2FF")
+  
+boxplot(dones$Age, homes$Age, names = c("Dones","Homes"))
+
+if(!require('modeest')) install.packages('modeest')
+library(modeest)
+mitH<-round(mean.default(homes$Age), 2)
+mitD<-round(mean.default(dones$Age), 2)
+Mitjana <- as.numeric(c(mitH, mitD))
+Taula <- as.data.frame(rbind(Mitjana))
+colnames(Taula)<-c("Homes", "Dones")
+Taula
+
+boxplot(dones$Fare, homes$Fare, names = c("Dones","Homes"))
+
+ggplot(dades, aes(x=Pclass, fill=Survived, colour=Survived)) + geom_bar() + ggthemes::theme_economist() + scale_color_gdocs() + ggthemes::scale_fill_gdocs()
+
+write.csv(dades,"C:/Users/guill/OneDrive/Documentos/UOC/Màster/3r semestre/Tipologia de dades/PRA2/Titanic_updated.csv", row.names = FALSE)
+
+tabl <- "  # Taula de contribució:
+
+| Contribucions             | Firma                        |
+|---------------------------|:----------------------------:|
+| Investigació prèvia       | Guillem Vidal, Lídia Bandrés | 
+| Redacció de respostes     | Guillem Vidal, Lídia Bandrés |
+| Desenvolupament del codi  | Guillem Vidal, Lídia Bandrés |
+"
+cat(tabl) 
+
+  
+  
